@@ -23,7 +23,7 @@ class VideoPlayerApp:
         self.video_frame.place(relx=0.5, rely=0.5, anchor="center")  # Zentriert im Haupt-Frame
 
         # Videoanzeige innerhalb des Rahmens
-        self.video_canvas = tk.Label(self.video_frame, bg="green", width=8  00, height=600)  # Canvas 300x200
+        self.video_canvas = tk.Label(self.video_frame, bg="green", width=800, height=600)  # Canvas 300x200
         self.video_canvas.place(relx=0.5, rely=0.5, anchor="center")  # Zentriert im Rahmen
 
         # Buttons
