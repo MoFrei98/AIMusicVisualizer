@@ -3,34 +3,48 @@ from tkinter import filedialog
 import cv2
 from PIL import Image, ImageTk
 import pygame
+from music_motion_ai import MusicMotionAI
 
 class VideoPlayerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Media Player")
-        self.root.geometry("800x600")  # Standardgröße des Fensters
+        self.root.geometry("900x700")  # Standardgröße des Fensters
+        self.root.state('zoomed') # Fenster maximieren
 
         # Haupt-Frame
-        self.main_frame = tk.Frame(root, bg="gray")  # Hintergrund auf Grau setzen
+        self.main_frame = tk.Frame(root, bg="white")  # Hintergrund auf Grau setzen
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Songtitel-Label (oben links)
         self.song_title_label = tk.Label(self.main_frame, text="No file selected", bg="white", fg="black", anchor="w")
         self.song_title_label.place(relx=0.0, rely=0.0, anchor="nw")  # Oben links
 
-        # Videoplayer-Rahmen mit fester Größe
-        self.video_frame = tk.Frame(self.main_frame, bg="black", width=850, height=650)  # Rahmen 10px größer
-        self.video_frame.place(relx=0.5, rely=0.5, anchor="center")  # Zentriert im Haupt-Frame
-
-        # Videoanzeige innerhalb des Rahmens
-        self.video_canvas = tk.Label(self.video_frame, bg="green", width=800, height=600)  # Canvas 300x200
-        self.video_canvas.place(relx=0.5, rely=0.5, anchor="center")  # Zentriert im Rahmen
-
-        # Buttons
         self.select_button = tk.Button(root, text="Select File", command=self.select_file)
         self.select_button.place(relx=1.0, rely=0.0, anchor="ne")  # Oben rechts
 
-        self.play_pause_button = tk.Button(root, text="Play", command=self.play_pause)
+        # rahmen für video
+        self.video_frame = tk.Frame(self.main_frame, bg="white", width=850, height=625)  # Rahmen 10px größer
+        self.video_frame.pack(expand=True)
+
+        # video canvas
+        self.video_canvas = tk.Label(self.video_frame, bg="black", width=800, height=600)
+        self.video_canvas.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.extra_canvas = tk.Canvas(self.main_frame, bg="grey", height=40, bd=0, highlightthickness=0)
+        self.extra_canvas.place(relx=0.0, rely=1.0, relwidth=1.0, anchor="sw")
+
+        # Video-Presets Label (unten links)
+        self.preset_label = tk.Label(self.extra_canvas, text="Background", bg="white", fg="black")
+        self.preset_label.place(relx=0.0, rely=1.0, anchor="sw")
+
+        # Dropdown-Menü (OptionMenu) für Video-Presets, näher am Label
+        self.presets = ["Preset 1", "Preset 2", "Preset 3"]
+        self.selected_preset = tk.StringVar(value=self.presets[0])
+        self.preset_dropdown = tk.OptionMenu(self.extra_canvas, self.selected_preset, *self.presets)
+        self.preset_dropdown.place(relx=0.10, rely=1.0, anchor="sw")
+
+        self.play_pause_button = tk.Button(self.extra_canvas, text="Play", command=self.play_pause)
         self.play_pause_button.place(relx=1.0, rely=1.0, anchor="se")  # Unten rechts
 
         # Initialisierung
@@ -89,6 +103,12 @@ class VideoPlayerApp:
                 self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 self.playing = False
                 self.play_pause_button.config(text="Play")
+
+            music_motion = MusicMotionAI(self)
+            music_motion.set_file(self.audio_file)
+
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
