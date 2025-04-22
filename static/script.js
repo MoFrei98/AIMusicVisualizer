@@ -1,6 +1,14 @@
 let selectedFile = null; // Globale Variable für die ausgewählte Datei
 let audio = null; // Globale Variable für das Audio-Objekt
 
+function getSettings() {
+    return {
+        background: document.getElementById("background").value || null,
+        shapes: document.getElementById("shapes").value || null,
+        onMouseClick: document.getElementById("onMouseClick").value || null,
+    };
+}
+
 function selectFile() {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -22,6 +30,8 @@ function playPause() {
         console.error("Keine Datei ausgewählt!");
         return;
     }
+    const formData = new FormData();
+    formData.append("audio", selectedFile);
 
     if (!audio) {
         // Neues Audio-Objekt erstellen und die Datei laden
@@ -31,13 +41,14 @@ function playPause() {
     const playPauseButton = document.querySelector(".play-pause");
     if (audio.paused) {
         playPauseButton.textContent = "Generating video..."
-        const settings = {
-
-        }
+        playPauseButton.enabled = false
+        const settings = getSettings();
+        formData.append("settings", JSON.stringify(settings));
         displayVideo(settings).then(() => {
             console.log("Video generiert");
             audio.play().then(() => {
                 playPauseButton.textContent = "Pause"; // Button-Beschriftung ändern
+                playPauseButton.enabled = true
                 console.log("Wiedergabe gestartet");
             }).catch((error) => {
                 console.error("Fehler beim Starten der Wiedergabe:", error);
@@ -45,6 +56,10 @@ function playPause() {
         });
     } else {
         audio.pause();
+        const video = document.querySelector(".video-frame video");
+        if (video) {
+            video.pause();
+        }
         playPauseButton.textContent = "Play"; // Button-Beschriftung ändern
         console.log("Wiedergabe pausiert");
     }
@@ -65,7 +80,7 @@ async function displayVideo() {
 
         const videoFrame = document.querySelector(".video-frame");
         videoFrame.innerHTML = `
-            <video controls autoplay width="640" height="480">
+            <video autoplay muted width="640" height="480">
                 <source src="${videoURL}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>

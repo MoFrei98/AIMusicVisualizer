@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Video Player</title>
+        <link rel="stylesheet" href="../static/style.css">
+    </head>
+    <body>
+        <div class="player-page">
+            <div class="header">
+                <div class="file-title">No file selected</div>
+                <button class="select-file" onclick="selectFile()">Select File</button>
+            </div>
+            <div class="content">
+                <div class="settings">
+                    <label for="background">Background:</label>
+                    <select id="background">
+                        <option value="1">Image</option>
+                        <option value="2" selected>Black</option>
+                        <option value="3">White</option>
+                        <option value="4">Changing</option>
+                    </select>
+
+                    <label for="shapes">Shapes:</label>
+                    <select id="shapes">
+                        <option value="1">Squares</option>
+                        <option value="2" selected>Circles</option>
+                        <option value="3">Mixed</option>
+                    </select>
+
+                    <label for="onMouseClick">On mouse click:</label>
+                    <select id="onMouseClick">
+                        <option value="1">Zoom</option>
+                        <option value="2" selected>Create shapes</option>
+                    </select>
+                </div>
+                <div class="video-frame">
+                    <div class="video-placeholder">Video Frame</div>
+                </div>
+            </div>
+            <button class="play-pause" onclick="playPause()">Play</button>
+        </div>
+        <script src="../static/script.js"></script>
+    </body>
+</html>
