@@ -1,6 +1,22 @@
 let selectedFile = null; // Globale Variable für die ausgewählte Datei
 let audio = null; // Globale Variable für das Audio-Objekt
 
+const progressBar = document.getElementById("progress-bar");
+const eventSource = new EventSource("http://localhost:5000/progress");
+eventSource.onmessage = function (event) {
+    const progress = parseInt(event.data);
+    progressBar.value = progress;
+    if (progress === 0 || progress === 100) {
+        progressBar.classList.add("hidden");
+    } else {
+        progressBar.classList.remove("hidden");
+    }
+};
+eventSource.onerror = function (error) {
+    console.error("SSE connection error:", error);
+    eventSource.close(); // Optional: stop trying if failed
+};
+
 function getSettings() {
     return {
         background: document.getElementById("background").value || null,

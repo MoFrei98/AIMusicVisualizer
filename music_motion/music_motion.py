@@ -1,6 +1,7 @@
 import librosa
 import numpy as np
 from moviepy import AudioFileClip, VideoClip
+from moviepy.video.io.ffmpeg_writer import FFMPEG_VideoWriter
 import os
 import cv2
 
@@ -14,7 +15,7 @@ class MusicMotion:
         self.tempo, self.beats = librosa.beat.beat_track(y=y, sr=sr)
         onset_env = librosa.onset.onset_strength(y=y, sr=sr)
 
-    def generate_video(self, audio_path: str, output_path: str, settings: dict):
+    def generate_video(self, audio_path: str, output_path: str, settings: dict, progress_callback=None):
         self.set_file(audio_path)
         background = settings.get("background", "1")
         shapes = settings.get("shapes", "1")
@@ -42,8 +43,15 @@ class MusicMotion:
             return frame
 
         audio_clip = AudioFileClip(audio_path)
-        video = VideoClip(make_frame, duration=audio_clip.duration).with_audio(audio_clip)
-        video.write_videofile(output_path, fps=30, codec="libx264")
+        duration = audio_clip.duration
+        video = VideoClip(make_frame, duration=duration).with_audio(audio_clip)
+
+        writer = FFMPEG_VideoWriter(output_path, video.size, fps=30, codec="libx264")
+        for t in range(int(duration * 30)):  # 30 FPS
+            writer.write_frame(make_frame(t / 30))
+            if progress_callback:
+                progress_callback(t, duration * 30)
+        writer.close()
 
 
 

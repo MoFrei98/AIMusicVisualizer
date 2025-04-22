@@ -53,10 +53,14 @@ body {
 }
 
 .settings {
+    display: flex;
+    flex-direction: column;
+
     width: 200px;
+    height: 100%;
     padding: 10px;
     background: #f9f9f9;
-    border-right: 1px solid #ccc;
+    border-right: 0.25rem solid #ccc;
 }
 
 .settings label {
@@ -100,6 +104,36 @@ body {
     color: #fff;
     border: none;
     border-radius: 3px;
+}
+
+.lower-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+
+    width: 100%;
+    height: 4rem; /* smaller, unless you want it really big */
+    padding: 0 1rem;
+}
+
+#progress-bar {
+    width: 45%;
+    height: 1.5rem;
+    appearance: none;
+
+    margin-left: 13rem;
+}
+
+#progress-bar.hidden {
+    display: none;
+}
+
+.play-pause {
+    height: 2rem;
+    padding: 0 1rem;
+    font-size: 1rem;
+    cursor: pointer;
 }
 
 .play-pause:hover {
