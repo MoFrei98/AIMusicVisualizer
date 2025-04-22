@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Video Player</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="player-page">
+            <div class="header">
+                <div class="file-title">No file selected</div>
+                <button class="select-file" onclick="selectFile()">Select File</button>
+            </div>
+            <div class="content">
+                <div class="settings">
+                    <label for="preset">Background:</label>
+                    <select id="preset">
+                        <option value="preset1">Preset 1</option>
+                        <option value="preset2">Preset 2</option>
+                        <option value="preset3">Preset 3</option>
+                    </select>
+                    <label for="quality">Shapes:</label>
+                    <select id="quality">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="video-frame">
+                    <div class="video-placeholder">Video Frame</div>
+                </div>
+            </div>
+            <button class="play-pause" onclick="playPause()">Play</button>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
