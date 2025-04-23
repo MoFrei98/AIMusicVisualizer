@@ -1,14 +1,13 @@
 from flask import Flask, request, Response, send_file, render_template
 from flask_cors import CORS
-from moviepy import *
-import librosa
 import numpy as np
 import json
 import time
+from music_motion.live_visualizer import LiveVisualizer
 from music_motion.music_motion import MusicMotion
 
 app = Flask(__name__, template_folder="templates")
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 ai = MusicMotion()
 progress = 0
@@ -49,6 +48,37 @@ def generate_video_route():
     progress = 100
 
     return send_file(output_path, mimetype="video/mp4")
+
+@app.route('/visualisation-stream')
+def visualisation_stream():
+    audio_file = request.args.get('audio')
+    settings_raw = request.args.get('settings', '{}')
+    settings = json.loads(settings_raw)
+
+    def generate():
+        visualizer = LiveVisualizer(audio_file, settings)
+        visualizer.analyze_audio()
+        start_time = time.time()
+
+        while visualizer.running:
+            current_time = time.time() - start_time
+            data = {
+                "time": current_time,
+                "graphics": []
+            }
+
+            if any(abs(current_time - bt) < 0.05 for bt in visualizer.beat_times):
+                data["graphics"].append({
+                    "type": "circle",
+                    "color": [255, 0, 0],
+                    "position": [400, 300],
+                    "radius": np.random.randint(30, 100)
+                })
+
+            yield f"data: {json.dumps(data)}\n\n"
+            time.sleep(0.05)
+
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)

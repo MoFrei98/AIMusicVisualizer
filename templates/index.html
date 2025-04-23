@@ -36,11 +36,12 @@
                     </select>
                 </div>
                 <div class="video-frame">
-                    <div class="video-placeholder">Video Frame</div>
+                    <canvas id="visualizerCanvas" width="640" height="480"></canvas>
+                    <audio id="audioPlayer" controls style="display: none;"></audio>
                 </div>
             </div>
             <section class="lower-bar">
-                <progress id="progress-bar" value="0" max="100"></progress>
+                <!--<progress id="progress-bar" value="0" max="100"></progress>-->
                 <button class="play-pause" onclick="playPause()">Play</button>
             </section>
         </div>

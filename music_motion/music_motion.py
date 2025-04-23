@@ -2,7 +2,7 @@ import librosa
 import numpy as np
 from moviepy import AudioFileClip, VideoClip
 from moviepy.video.io.ffmpeg_writer import FFMPEG_VideoWriter
-import os
+import random
 import cv2
 
 class MusicMotion:
@@ -22,6 +22,8 @@ class MusicMotion:
         mouse_effect = settings.get("onMouseClick", "1")
 
         def make_frame(t):
+            np.random.seed(int(t * 100))  # reproducible randomness per frame
+
             color_val = int(255 * abs(np.sin(t * self.tempo / 60)))
             bg_color = (0, 0, 0)
 
@@ -34,11 +36,15 @@ class MusicMotion:
 
             frame = np.full((480, 640, 3), bg_color, dtype=np.uint8)
 
-            # Add shape drawing logic
-            if shapes in ["1", "3"]:  # Squares or Mixed
-                cv2.rectangle(frame, (100, 100), (150, 150), (255, 0, 0), -1)
-            if shapes in ["2", "3"]:  # Circles or Mixed
-                cv2.circle(frame, (320, 240), 30, (0, 255, 0), -1)
+            for _ in range(5):  # draw multiple shapes
+                x = random.randint(0, 600)
+                y = random.randint(0, 440)
+                size = random.randint(20, 60)
+
+                if shapes in ["1", "3"]:  # squares
+                    cv2.rectangle(frame, (x, y), (x + size, y + size), (255, 0, 0), -1)
+                if shapes in ["2", "3"]:  # circles
+                    cv2.circle(frame, (x + size//2, y + size//2), size//2, (0, 255, 0), -1)
 
             return frame
 
