@@ -1,12 +1,25 @@
 @echo off
-REM Paketmanager updaten
-echo Updating pip...
-python.exe -m pip install --upgrade pip
+REM Standardwerte für die Parameter setzen
+set "install_libs=false"
+set "no_browser=false"
 
-REM Installiere die Python-Bibliotheken aus libs.txt
-echo Installing Python libraries...
-pip install -r libs.txt
+REM Parameter prüfen und setzen
+for %%A in (%*) do (
+    if "%%A"=="--install_libs" set "install_libs=true"
+    if "%%A"=="--no_browser" set "no_browser=true"
+)
 
-REM Starte den Backend-Server
-start http://localhost:5000
+REM Paketmanager updaten, wenn install_libs=true
+if "%install_libs%"=="true" (
+    echo Updating pip...
+    python.exe -m pip install --upgrade pip
+
+    echo Installing Python libraries...
+    pip install -r libs.txt
+)
+
+REM Backend-Server starten
+if "%no_browser%"=="false" (
+    start http://localhost:5000
+)
 python server.py

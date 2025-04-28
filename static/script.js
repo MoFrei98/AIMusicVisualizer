@@ -69,8 +69,9 @@ async function playPause() {
         playPauseButton.disabled = true;
 
         // 1. Einstellungen und Datei vorbereiten
-        const audioFile = encodeURIComponent(selectedFile.name); // Beispiel: Dateiname
+        const audioFile = encodeURIComponent(selectedFile.name);
         const settings = encodeURIComponent(JSON.stringify(getSettings()));
+        console.log('Settings:', decodeURIComponent(settings));
 
         try {
             // 2. An den Server senden und warten
@@ -126,16 +127,30 @@ let dataArray;
 let bufferLength;
 
 function setupAudioProcessing() {
-    const audio = document.getElementById("audioPlayer");
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    analyser.fftSize = 256;
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-    bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
+    if (!audio.source) {
+        const source = audioCtx.createMediaElementSource(audio);
+        source.connect(audioCtx.destination);
+        analyser = audioCtx.createAnalyser();
+        source.connect(analyser);
+        analyser.fftSize = 256;
+
+        bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+
+        // Speichere die Quelle, um doppelte Verbindungen zu vermeiden
+        audio.source = source;
+    }
+}
+
+function changeBackground(value) {
+    if (value === "black" || value === "white") {
+        ctx.fillStyle = value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 function draw() {
@@ -143,14 +158,77 @@ function draw() {
     analyser.getByteFrequencyData(dataArray);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const settings = getSettings();
+    switch (settings.background) {
+        case "black":
+        case "white":
+            ctx.fillStyle = settings.background;
+            break;
+        case "img":
+            // TODO: Implement image background
+            break;
 
+        case "chng":
+            // TODO: Implement changing background colors (rgb)
+            break;
+        default:
+            ctx.fillStyle = "black";
+    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    switch (settings.shapes) {
+        case "bars":
+            drawBars();
+            break;
+        case "squares":
+            drawSquares();
+            break;
+        case "cicles":
+            drawCircles();
+            break;
+        case "mix":
+            // TODO: Implement mixed shapes
+            break;
+        default:
+            console.error("Unrecognized shape type");
+    }
+}
+
+function drawBars() {
     const barWidth = canvas.width / bufferLength;
     let x = 0;
-
     for (let i = 0; i < bufferLength; i++) {
         const barHeight = dataArray[i];
         ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
         x += barWidth;
+    }
+}
+
+let frameCounter = 0;
+function drawSquares() {
+    frameCounter++;
+    if (frameCounter % 60 !== 0) return; // Nur bei jedem 4. Frame ausführen
+
+    for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i];
+        const x = Math.random() * (canvas.width - 50); // Zufällige X-Position
+        const y = Math.random() * (canvas.height - 50); // Zufällige Y-Position
+        const size = Math.random() * 50 + 10; // Zufällige Größe zwischen 10 und 60
+        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
+        ctx.fillRect(x, y, size, size);
+    }
+}
+
+function drawCircles() {
+    for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i];
+        const x = Math.random() * canvas.width; // Zufällige X-Position
+        const y = Math.random() * canvas.height; // Zufällige Y-Position
+        const radius = Math.random() * 30 + 10; // Zufälliger Radius zwischen 10 und 40
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
+        ctx.fill();
     }
 }

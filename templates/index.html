@@ -15,24 +15,25 @@
             <div class="content">
                 <div class="settings">
                     <label for="background">Background:</label>
-                    <select id="background">
-                        <option value="1">Image</option>
-                        <option value="2" selected>Black</option>
-                        <option value="3">White</option>
-                        <option value="4">Changing</option>
+                    <select id="background" onchange="changeBackground(this.value)">
+                        <option value="black" selected>Black</option>
+                        <option value="white">White</option>
+                        <option value="img">Image</option>
+                        <option value="chng">Changing</option>
                     </select>
 
                     <label for="shapes">Shapes:</label>
                     <select id="shapes">
-                        <option value="1">Squares</option>
-                        <option value="2" selected>Circles</option>
-                        <option value="3">Mixed</option>
+                        <option value="bars" selected>Bars</option>
+                        <option value="squares">Squares</option>
+                        <option value="circles">Circles</option>
+                        <option value="mix">Mixed</option>
                     </select>
 
                     <label for="onMouseClick">On mouse click:</label>
                     <select id="onMouseClick">
-                        <option value="1">Zoom</option>
-                        <option value="2" selected>Create shapes</option>
+                        <option value="1" selected>Create shapes</option>
+                        <option value="2">Zoom</option>
                     </select>
                 </div>
                 <div class="video-frame">
