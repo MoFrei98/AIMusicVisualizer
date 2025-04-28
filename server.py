@@ -1,8 +1,8 @@
-from flask import Flask, request, Response, send_file, render_template
+from flask import Flask, request, Response, send_file, render_template, jsonify
 from flask_cors import CORS
-import numpy as np
 import json
 import time
+import os
 from music_motion.live_visualizer import LiveVisualizer
 from music_motion.music_motion import MusicMotion
 
@@ -49,36 +49,41 @@ def generate_video_route():
 
     return send_file(output_path, mimetype="video/mp4")
 
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Keine Datei'}), 400
+
+    file = request.files['file']
+    filename = file.filename
+    filepath = os.path.join('./uploads', filename)
+    file.save(filepath)
+
+    return jsonify({'filename': filename})
+
 @app.route('/visualisation-stream')
 def visualisation_stream():
     audio_file = request.args.get('audio')
-    settings_raw = request.args.get('settings', '{}')
-    settings = json.loads(settings_raw)
+    settings_raw = request.args.get('settings')
 
-    def generate():
-        visualizer = LiveVisualizer(audio_file, settings)
-        visualizer.analyze_audio()
-        start_time = time.time()
+    # settings_raw ist ein JSON-String → Umwandeln in Dict
+    try:
+        settings = json.loads(settings_raw)
+    except json.JSONDecodeError:
+        # Im Fehlerfall Default-Werte verwenden
+        settings = {
+            "background": "black",
+            "shapes": "bars",
+            "onMouseClick": None
+        }
 
-        while visualizer.running:
-            current_time = time.time() - start_time
-            data = {
-                "time": current_time,
-                "graphics": []
-            }
-
-            if any(abs(current_time - bt) < 0.05 for bt in visualizer.beat_times):
-                data["graphics"].append({
-                    "type": "circle",
-                    "color": [255, 0, 0],
-                    "position": [400, 300],
-                    "radius": np.random.randint(30, 100)
-                })
-
-            yield f"data: {json.dumps(data)}\n\n"
-            time.sleep(0.05)
-
-    return Response(generate(), mimetype='text/event-stream')
+    visualizer = LiveVisualizer(audio_file, settings)
+    try:
+        return Response(visualizer.stream_frames(), mimetype='text/event-stream')
+    except Exception as e:
+        # Fehler abfangen und loggen
+        print(f"Error in visualisation stream: {e}")
+        return jsonify({"error": "An error occurred while processing the stream"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

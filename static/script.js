@@ -1,9 +1,16 @@
 let selectedFile = null;
 let audio = document.getElementById("audioPlayer");
+audio.addEventListener('ended', () => {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+    document.querySelector(".play-pause").textContent = "Play";
+});
+
 
 const canvas = document.getElementById("visualizerCanvas");
 const ctx = canvas.getContext("2d");
-
 
 /*
 const progressBar = document.getElementById("progress-bar");
@@ -26,7 +33,7 @@ eventSource.onerror = function (error) {
 function getSettings() {
     return {
         background: document.getElementById("background").value || null,
-        shapes: document.getElementById("shapes").value || null,
+        shape: document.getElementById("shapes").value || null,
         onMouseClick: document.getElementById("onMouseClick").value || null,
     };
 }
@@ -43,19 +50,38 @@ function selectFile() {
             document.querySelector(".file-title").textContent = file.name;
 
             const audio = document.getElementById("audioPlayer");
-            const url = URL.createObjectURL(file);
-            audio.src = url;
+            audio.src = URL.createObjectURL(file);
             audio.load();
 
             audio.onplay = () => {
-                if (!window.audioCtx) setupAudioProcessing();
-                draw(); // Starte Visualisierung
+                if (!window.audioCtx)
+                    setupAudioProcessing();
             };
         }
     };
     fileInput.click();
 }
 
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Upload fehlgeschlagen!');
+    }
+
+    const result = await response.json();
+    console.log('Upload result:', result);
+    return result.filename; // Server gibt dir den neuen Dateinamen zurück
+}
+
+
+let eventSource = null;
 async function playPause() {
     if (!selectedFile) {
         console.error("Keine Datei ausgewählt!");
@@ -68,42 +94,35 @@ async function playPause() {
         playPauseButton.textContent = "Generating...";
         playPauseButton.disabled = true;
 
-        // 1. Einstellungen und Datei vorbereiten
-        const audioFile = encodeURIComponent(selectedFile.name);
+        const audioFile = encodeURIComponent(await uploadFile(selectedFile));
         const settings = encodeURIComponent(JSON.stringify(getSettings()));
+
         console.log('Settings:', decodeURIComponent(settings));
 
         try {
-            // 2. An den Server senden und warten
-            const eventSource = new EventSource(`http://localhost:5000/visualisation-stream?audio=${audioFile}&settings=${settings}`);
+            eventSource = new EventSource(`http://localhost:5000/visualisation-stream?audio=${audioFile}&settings=${settings}`);
+            eventSource.onopen = () => console.log("EventSource connection opened");
             eventSource.onmessage = function (event) {
-                const data = JSON.parse(event.data);
-
-                // Canvas leeren
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Grafiken zeichnen
-                data.graphics.forEach(graphic => {
-                    if (graphic.type === "circle") {
-                        ctx.beginPath();
-                        ctx.arc(graphic.position[0], graphic.position[1], graphic.radius, 0, 2 * Math.PI);
-                        ctx.fillStyle = `rgb(${graphic.color[0]}, ${graphic.color[1]}, ${graphic.color[2]})`;
-                        ctx.fill();
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.error) {
+                        console.error("Error from server:", data.error);
+                    } else {
+                        drawGraphics(data.graphics);
                     }
-                });
+                } catch (err) {
+                    console.error("Error processing data:", err);
+                }
             };
-
             eventSource.onerror = function (error) {
                 console.error("SSE connection error:", error);
                 eventSource.close();
             };
 
-            // 3. Audio-Element vorbereiten
             const url = URL.createObjectURL(selectedFile);
             audio.src = url;
             audio.load();
 
-            // 4. Audio starten
             audio.play().then(() => {
                 playPauseButton.textContent = "Pause";
                 playPauseButton.disabled = false;
@@ -118,6 +137,12 @@ async function playPause() {
         // Pausieren
         audio.pause();
         playPauseButton.textContent = "Play";
+
+        // Beende auch den Stream!
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
     }
 }
 
@@ -153,82 +178,33 @@ function changeBackground(value) {
     }
 }
 
-function draw() {
-    requestAnimationFrame(draw);
-    analyser.getByteFrequencyData(dataArray);
-
+function drawGraphics(graphics) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    console.log("Zeichne Grafiken:", graphics);  // Debugging-Ausgabe
+
     const settings = getSettings();
     switch (settings.background) {
         case "black":
         case "white":
             ctx.fillStyle = settings.background;
-            break;
-        case "img":
-            // TODO: Implement image background
-            break;
-
-        case "chng":
-            // TODO: Implement changing background colors (rgb)
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             break;
         default:
             ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    switch (settings.shapes) {
-        case "bars":
-            drawBars();
-            break;
-        case "squares":
-            drawSquares();
-            break;
-        case "cicles":
-            drawCircles();
-            break;
-        case "mix":
-            // TODO: Implement mixed shapes
-            break;
-        default:
-            console.error("Unrecognized shape type");
-    }
-}
-
-function drawBars() {
-    const barWidth = canvas.width / bufferLength;
-    let x = 0;
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-        x += barWidth;
-    }
-}
-
-let frameCounter = 0;
-function drawSquares() {
-    frameCounter++;
-    if (frameCounter % 60 !== 0) return; // Nur bei jedem 4. Frame ausführen
-
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        const x = Math.random() * (canvas.width - 50); // Zufällige X-Position
-        const y = Math.random() * (canvas.height - 50); // Zufällige Y-Position
-        const size = Math.random() * 50 + 10; // Zufällige Größe zwischen 10 und 60
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-        ctx.fillRect(x, y, size, size);
-    }
-}
-
-function drawCircles() {
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        const x = Math.random() * canvas.width; // Zufällige X-Position
-        const y = Math.random() * canvas.height; // Zufällige Y-Position
-        const radius = Math.random() * 30 + 10; // Zufälliger Radius zwischen 10 und 40
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-        ctx.fill();
-    }
+    graphics.forEach(graphic => {
+        if (graphic.type === "circle") {
+            ctx.beginPath();
+            ctx.arc(graphic.position[0], graphic.position[1], graphic.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgb(${graphic.color[0]}, ${graphic.color[1]}, ${graphic.color[2]})`;
+            ctx.fill();
+        } else if (graphic.type === "bar") {
+            ctx.fillStyle = `rgb(${graphic.color[0]}, ${graphic.color[1]}, ${graphic.color[2]})`;
+            ctx.fillRect(graphic.position[0], graphic.position[1], graphic.size[0], graphic.size[1]);
+        }
+        // Weitere Formen könnten hier hinzugefügt werden
+    });
 }
