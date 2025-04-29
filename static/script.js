@@ -3,6 +3,7 @@ let audio = document.getElementById("audioPlayer");
 
 const canvas = document.getElementById("visualizerCanvas");
 const ctx = canvas.getContext("2d");
+let settings = null;
 
 
 /*
@@ -27,6 +28,7 @@ function getSettings() {
     return {
         background: document.getElementById("background").value || null,
         shapes: document.getElementById("shapes").value || null,
+        numberOfShapes: document.getElementById("numberOfShapes").value || null,
         onMouseClick: document.getElementById("onMouseClick").value || null,
     };
 }
@@ -46,16 +48,12 @@ function selectFile() {
             const url = URL.createObjectURL(file);
             audio.src = url;
             audio.load();
-
-            audio.onplay = () => {
-                if (!window.audioCtx) setupAudioProcessing();
-                draw(); // Starte Visualisierung
-            };
         }
     };
     fileInput.click();
 }
 
+let isPlaying = false;
 async function playPause() {
     if (!selectedFile) {
         console.error("Keine Datei ausgewählt!");
@@ -64,60 +62,35 @@ async function playPause() {
 
     const playPauseButton = document.querySelector(".play-pause");
 
-    if (!audio || audio.paused) {
+    if (!isPlaying) {
+        isPlaying = true;
         playPauseButton.textContent = "Generating...";
         playPauseButton.disabled = true;
 
-        // 1. Einstellungen und Datei vorbereiten
-        const audioFile = encodeURIComponent(selectedFile.name);
-        const settings = encodeURIComponent(JSON.stringify(getSettings()));
-        console.log('Settings:', decodeURIComponent(settings));
+        // Einstellungen nur einmal laden
+        settings = getSettings();
+        console.log('Settings:', settings);
 
-        try {
-            // 2. An den Server senden und warten
-            const eventSource = new EventSource(`http://localhost:5000/visualisation-stream?audio=${audioFile}&settings=${settings}`);
-            eventSource.onmessage = function (event) {
-                const data = JSON.parse(event.data);
+        // Audio-Element vorbereiten
+        const url = URL.createObjectURL(selectedFile);
+        audio.src = url;
+        audio.load();
+        setupAudioProcessing();
 
-                // Canvas leeren
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Grafiken zeichnen
-                data.graphics.forEach(graphic => {
-                    if (graphic.type === "circle") {
-                        ctx.beginPath();
-                        ctx.arc(graphic.position[0], graphic.position[1], graphic.radius, 0, 2 * Math.PI);
-                        ctx.fillStyle = `rgb(${graphic.color[0]}, ${graphic.color[1]}, ${graphic.color[2]})`;
-                        ctx.fill();
-                    }
-                });
-            };
-
-            eventSource.onerror = function (error) {
-                console.error("SSE connection error:", error);
-                eventSource.close();
-            };
-
-            // 3. Audio-Element vorbereiten
-            const url = URL.createObjectURL(selectedFile);
-            audio.src = url;
-            audio.load();
-
-            // 4. Audio starten
-            audio.play().then(() => {
-                playPauseButton.textContent = "Pause";
-                playPauseButton.disabled = false;
-            });
-
-        } catch (err) {
-            console.error("Fehler bei Anfrage:", err);
-            playPauseButton.textContent = "Play";
+        // Audio starten
+        audio.play().then(() => {
+            draw(); // Starte Visualisierung
+            playPauseButton.textContent = "Pause";
             playPauseButton.disabled = false;
-        }
+        });
     } else {
+        isPlaying = false;
         // Pausieren
         audio.pause();
         playPauseButton.textContent = "Play";
+
+        shapes = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
 
@@ -153,12 +126,25 @@ function changeBackground(value) {
     }
 }
 
+function changeShapes(value) {
+    const numberContainer = document.querySelector('.number-container');
+    if (value === "bars") {
+        numberContainer.style.display = "none";
+    } else {
+        numberContainer.style.display = "flex";
+    }
+}
+
 function draw() {
+    if (!isPlaying)
+        return;
+
     requestAnimationFrame(draw);
     analyser.getByteFrequencyData(dataArray);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const settings = getSettings();
+
+    // Hintergrundfarbe setzen
     switch (settings.background) {
         case "black":
         case "white":
@@ -167,7 +153,6 @@ function draw() {
         case "img":
             // TODO: Implement image background
             break;
-
         case "chng":
             // TODO: Implement changing background colors (rgb)
             break;
@@ -176,15 +161,16 @@ function draw() {
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Formen zeichnen
     switch (settings.shapes) {
         case "bars":
             drawBars();
             break;
         case "squares":
-            drawSquares();
+            drawSquares(settings.numberOfShapes);
             break;
-        case "cicles":
-            drawCircles();
+        case "circles":
+            drawCircles(settings.numberOfShapes);
             break;
         case "mix":
             // TODO: Implement mixed shapes
@@ -205,30 +191,44 @@ function drawBars() {
     }
 }
 
-let frameCounter = 0;
-function drawSquares() {
-    frameCounter++;
-    if (frameCounter % 60 !== 0) return; // Nur bei jedem 4. Frame ausführen
+let shapes = [];
 
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        const x = Math.random() * (canvas.width - 50); // Zufällige X-Position
-        const y = Math.random() * (canvas.height - 50); // Zufällige Y-Position
-        const size = Math.random() * 50 + 10; // Zufällige Größe zwischen 10 und 60
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-        ctx.fillRect(x, y, size, size);
+function drawSquares(numberOfShapes) {
+    if (shapes.length === 0) {
+        for (let i = 0; i < numberOfShapes; i++) {
+            const size = Math.random() * 50 + 10;
+            const x = numberOfShapes === 1 ? (canvas.width - size) / 2 : Math.random() * (canvas.width - size);
+            const y = numberOfShapes === 1 ? (canvas.height - size) / 2 : Math.random() * (canvas.height - size);
+            shapes.push({ x, y, size });
+            console.log(`Square ${i}: x=${x}, y=${y}, size=${size}`);
+        }
     }
+
+    shapes.forEach(shape => {
+        const height = dataArray[Math.floor(Math.random() * bufferLength)];
+        const wobble = height / 10;
+        ctx.fillStyle = `rgb(${height + 100}, 50, 150)`;
+        ctx.fillRect(shape.x - wobble, shape.y - wobble, shape.size + wobble * 2, shape.size + wobble * 2);
+    });
 }
 
-function drawCircles() {
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        const x = Math.random() * canvas.width; // Zufällige X-Position
-        const y = Math.random() * canvas.height; // Zufällige Y-Position
-        const radius = Math.random() * 30 + 10; // Zufälliger Radius zwischen 10 und 40
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-        ctx.fill();
+function drawCircles(numberOfShapes) {
+    if (shapes.length === 0) {
+        for (let i = 0; i < numberOfShapes; i++) {
+            const radius = Math.random() * 30 + 10;
+            const x = numberOfShapes === 1 ? canvas.width / 2 : Math.random() * canvas.width;
+            const y = numberOfShapes === 1 ? canvas.height / 2 : Math.random() * canvas.height;
+            shapes.push({ x, y, radius });
+            console.log(`Circle ${i}: x=${x}, y=${y}, radius=${radius}`);
+        }
     }
+
+    shapes.forEach(shape => {
+        const radius = dataArray[Math.floor(Math.random() * bufferLength)];
+        const wobble = radius / 20;
+        ctx.beginPath();
+        ctx.arc(shape.x, shape.y, shape.radius + wobble, 0, Math.PI * 2);
+        ctx.fillStyle = `rgb(${radius + 100}, 50, 150)`;
+        ctx.fill();
+    });
 }

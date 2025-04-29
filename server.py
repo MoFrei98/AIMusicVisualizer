@@ -20,7 +20,13 @@ def progress_callback(current, total):
 def index():
     return render_template("index.html")
 
-# backend
+
+
+
+
+
+
+# backend (currently not used)
 @app.route('/progress')
 def progress_route():
     def generate():

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Video Player</title>
+        <title>Music Motion</title>
         <link rel="stylesheet" href="../static/style.css">
     </head>
     <body>
@@ -23,12 +23,17 @@
                     </select>
 
                     <label for="shapes">Shapes:</label>
-                    <select id="shapes">
+                    <select id="shapes" onchange="changeShapes(this.value)">
                         <option value="bars" selected>Bars</option>
                         <option value="squares">Squares</option>
                         <option value="circles">Circles</option>
                         <option value="mix">Mixed</option>
                     </select>
+
+                    <div class="number-container">
+                        <label for="numberOfShapes">Number of shapes:</label>
+                        <input type="number" id="numberOfShapes" value="1" min="1" max="100">
+                    </div>
 
                     <label for="onMouseClick">On mouse click:</label>
                     <select id="onMouseClick">

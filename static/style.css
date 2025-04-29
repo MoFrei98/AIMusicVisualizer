@@ -79,6 +79,19 @@ body {
     border-radius: 3px;
 }
 
+.number-container {
+    display: none; // flex
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 0.5rem;
+}
+
+#numberOfShapes {
+    width: 2.5rem;
+}
+
 .video-frame {
     position: relative;
     width: 640px;
