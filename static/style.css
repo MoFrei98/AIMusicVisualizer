@@ -9,38 +9,38 @@ body {
 }
 
 .player-page {
-    width: 900px;
-    height: 600px;
+    width: 56.25rem;
+    height: 37.5rem;
     background: #fff;
-    border: 1px solid #ccc;
+    border: 0.0625rem solid #ccc;
     display: flex;
     flex-direction: column;
     position: relative;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.1);
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 0.625rem;
     background: #f1f1f1;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 0.0625rem solid #ccc;
 }
 
 .file-title {
-    font-size: 16px;
+    font-size: 1rem;
     color: #333;
 }
 
 .select-file {
-    padding: 5px 10px;
-    font-size: 14px;
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.875rem;
     cursor: pointer;
     background: #007bff;
     color: #fff;
     border: none;
-    border-radius: 3px;
+    border-radius: 0.1875rem;
 }
 
 .select-file:hover {
@@ -55,36 +55,38 @@ body {
 .settings {
     display: flex;
     flex-direction: column;
-
-    width: 200px;
+    width: 15rem;
     height: 100%;
-    padding: 10px;
+    padding: 0.625rem;
     background: #f9f9f9;
     border-right: 0.25rem solid #ccc;
 }
 
+h3 {
+    margin-top: 0.25rem;
+}
+
 .settings label {
     display: block;
-    margin-bottom: 5px;
-    font-size: 14px;
+    margin-bottom: 0.3125rem;
+    font-size: 0.875rem;
     color: #333;
 }
 
 .settings select {
     width: 100%;
-    padding: 5px;
-    margin-bottom: 15px;
-    font-size: 14px;
+    padding: 0.3125rem;
+    margin-bottom: 0.9375rem;
+    font-size: 0.875rem;
     border: 1px solid #ccc;
-    border-radius: 3px;
+    border-radius: 0.1875rem;
 }
 
 .number-container {
-    display: none; // flex
+    display: none; /* flex */
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-
     margin-bottom: 0.5rem;
 }
 
@@ -92,16 +94,24 @@ body {
     width: 2.5rem;
 }
 
+.image-selector-container {
+    display: none; /* flex */
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
 .video-frame {
     position: relative;
-    width: 640px;
-    height: 480px;
+    width: 40rem;
+    height: 30rem;
     margin: auto;
-    border: 2px solid #444;
+    border: 0.125rem solid #444;
     background-color: #000;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0.9375rem rgba(0,0,0,0.5);
 }
 
 canvas#visualizerCanvas {
@@ -112,15 +122,15 @@ canvas#visualizerCanvas {
 
 .play-pause {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    padding: 10px 20px;
-    font-size: 14px;
+    bottom: 0.625rem;
+    right: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
     cursor: pointer;
     background: #007bff;
     color: #fff;
     border: none;
-    border-radius: 3px;
+    border-radius: 0.1875rem;
 }
 
 .lower-bar {
@@ -128,9 +138,8 @@ canvas#visualizerCanvas {
     flex-direction: row;
     align-items: center;
     gap: 1rem;
-
     width: 100%;
-    height: 4rem; /* smaller, unless you want it really big */
+    height: 4rem;
     padding: 0 1rem;
 }
 
@@ -138,7 +147,6 @@ canvas#visualizerCanvas {
     width: 45%;
     height: 1.5rem;
     appearance: none;
-
     margin-left: 13rem;
 }
 

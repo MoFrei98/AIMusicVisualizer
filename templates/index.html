@@ -13,8 +13,10 @@
                 <button class="select-file" onclick="selectFile()">Select File</button>
             </div>
             <div class="content">
-                <div class="settings">
-                    <label for="background">Background:</label>
+                <section class="settings">
+                    <h3>Settings</h3>
+
+                    <label for="background"><strong>Background:</strong></label>
                     <select id="background" onchange="changeBackground(this.value)">
                         <option value="black" selected>Black</option>
                         <option value="white">White</option>
@@ -22,7 +24,11 @@
                         <option value="chng">Changing</option>
                     </select>
 
-                    <label for="shapes">Shapes:</label>
+                    <div class="image-selector-container">
+                        <input type="file" id="imageSelector" accept=\"image/*\" onchange="changeImage(event)">
+                    </div>
+
+                    <label for="shapes"><strong>Shapes:</strong></label>
                     <select id="shapes" onchange="changeShapes(this.value)">
                         <option value="bars" selected>Bars</option>
                         <option value="squares">Squares</option>
@@ -31,16 +37,22 @@
                     </select>
 
                     <div class="number-container">
-                        <label for="numberOfShapes">Number of shapes:</label>
-                        <input type="number" id="numberOfShapes" value="1" min="1" max="100">
+                        <label for="numberOfShapes"><strong>Number of shapes:</strong></label>
+                        <input type="number" id="numberOfShapes" value="1" min="1" max="100" onchange="changeNumberOfShapes(this.value)">
                     </div>
 
-                    <label for="onMouseClick">On mouse click:</label>
+                    <div class="color-picker-container" id="colorPickerContainer" style="display:none;">
+                        <label for="bgColorPicker"><strong>Background Color:</strong></label>
+                        <input type="color" id="bgColorPicker" value="#000000" onchange="changeBackgroundColor(this.value)">
+                    </div>
+
+                    <label for="onMouseClick"><strong>On mouse click:</strong></label>
                     <select id="onMouseClick">
                         <option value="1" selected>Create shapes</option>
                         <option value="2">Zoom</option>
                     </select>
-                </div>
+                </section>
+
                 <div class="video-frame">
                     <canvas id="visualizerCanvas" width="640" height="480"></canvas>
                     <audio id="audioPlayer" controls style="display: none;"></audio>

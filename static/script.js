@@ -67,13 +67,12 @@ async function playPause() {
         playPauseButton.textContent = "Generating...";
         playPauseButton.disabled = true;
 
-        // Einstellungen nur einmal laden
+        // Einstellungen laden
         settings = getSettings();
         console.log('Settings:', settings);
 
         // Audio-Element vorbereiten
-        const url = URL.createObjectURL(selectedFile);
-        audio.src = url;
+        audio.src = URL.createObjectURL(selectedFile);
         audio.load();
         setupAudioProcessing();
 
@@ -120,10 +119,23 @@ function setupAudioProcessing() {
 }
 
 function changeBackground(value) {
-    if (value === "black" || value === "white") {
-        ctx.fillStyle = value;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const imageSelector = document.querySelector('.image-selector-container');
+    switch (value) {
+        case "black":
+        case "white":
+            ctx.fillStyle = value;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            imageSelector.style.display = "none";
+            break;
+        case "img":
+            imageSelector.style.display = "flex";
+            break;
+        default:
+            imageSelector.style.display = "none";
+            break;
     }
+    // Einstellungen laden
+    settings = getSettings();
 }
 
 function changeShapes(value) {
@@ -133,6 +145,64 @@ function changeShapes(value) {
     } else {
         numberContainer.style.display = "flex";
     }
+    // Einstellungen laden
+    settings = getSettings();
+}
+
+function changeNumberOfShapes(value) {
+    console.log('trigger');
+    shapes = [];    // reset shapes
+    // Einstellungen laden
+    settings = getSettings();
+}
+
+// Globale Variable für das Bild hinzufügen
+let backgroundImage = null;
+
+function changeImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Neues Image-Objekt erstellen und global speichern
+            backgroundImage = new Image();
+            backgroundImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function changeBackground(value) {
+    const imageSelector = document.querySelector('.image-selector-container');
+    const colorPickerContainer = document.getElementById("colorPickerContainer");
+
+    switch (value) {
+        case "black":
+        case "white":
+            imageSelector.style.display = "none";
+            colorPickerContainer.style.display = "none";
+            break;
+        case "img":
+            imageSelector.style.display = "flex";
+            colorPickerContainer.style.display = "none";
+            break;
+        case "chng":
+            imageSelector.style.display = "none";
+            colorPickerContainer.style.display = "flex";
+            break;
+        default:
+            imageSelector.style.display = "none";
+            colorPickerContainer.style.display = "none";
+            break;
+    }
+    settings = getSettings();
+}
+
+function changeBackgroundColor(color) {
+    // Setze im momentanen Canvas den Hintergrund mit der ausgewählten Farbe
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // TODO: implement in settings
 }
 
 function draw() {
@@ -142,26 +212,33 @@ function draw() {
     requestAnimationFrame(draw);
     analyser.getByteFrequencyData(dataArray);
 
+    // Canvas leeren
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Hintergrundfarbe setzen
+    // Hintergrund zeichnen
     switch (settings.background) {
         case "black":
         case "white":
             ctx.fillStyle = settings.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             break;
         case "img":
-            // TODO: Implement image background
+            if (backgroundImage) {
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             break;
         case "chng":
-            // TODO: Implement changing background colors (rgb)
+            // TODO: implement
             break;
         default:
             ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Formen zeichnen
+    // Hier kommen die weiteren Zeichnungen (z.B. Formen)
     switch (settings.shapes) {
         case "bars":
             drawBars();
@@ -173,10 +250,10 @@ function draw() {
             drawCircles(settings.numberOfShapes);
             break;
         case "mix":
-            // TODO: Implement mixed shapes
+            // TODO: Implementiere gemischte Formen
             break;
         default:
-            console.error("Unrecognized shape type");
+            console.error("Unbekannter Formen-Typ");
     }
 }
 
@@ -195,6 +272,7 @@ let shapes = [];
 
 function drawSquares(numberOfShapes) {
     if (shapes.length === 0) {
+        // create squares
         for (let i = 0; i < numberOfShapes; i++) {
             const size = Math.random() * 50 + 10;
             const x = numberOfShapes === 1 ? (canvas.width - size) / 2 : Math.random() * (canvas.width - size);
@@ -214,6 +292,7 @@ function drawSquares(numberOfShapes) {
 
 function drawCircles(numberOfShapes) {
     if (shapes.length === 0) {
+        // create circles
         for (let i = 0; i < numberOfShapes; i++) {
             const radius = Math.random() * 30 + 10;
             const x = numberOfShapes === 1 ? canvas.width / 2 : Math.random() * canvas.width;
